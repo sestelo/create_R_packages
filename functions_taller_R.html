@@ -1,0 +1,170 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=utf-8">
+	<TITLE></TITLE>
+	<META NAME="GENERATOR" CONTENT="LibreOffice 3.6  (Linux)">
+	<META NAME="CREATED" CONTENT="0;0">
+	<META NAME="CHANGED" CONTENT="0;0">
+	<STYLE TYPE="text/css">
+	<!--
+		@page { margin: 0.79in }
+		P { margin-bottom: 0.08in }
+	-->
+	</STYLE>
+</HEAD>
+<BODY LANG="en-US" DIR="LTR">
+<PRE>setwd(&quot;~/Dropbox/Shared_Folders/MimoFolder/Trabajo/Curso_Librerías_R/creatingpackage&quot;)
+
+datos &lt;- read.table(&quot;production.txt&quot;, header = TRUE)
+
+
+
+#Creamos una función para regresión lineal
+
+reglin &lt;- function(x, y){
+	
+	#calculamos beta   (X'X)^(-1) X'Y
+	beta &lt;- (solve(t(x) %*% x)) %*% t(x) %*% y
+	coef &lt;- beta[, 1]
+	
+	#valores ajustados
+	fit &lt;- as.vector(x %*% beta)
+	
+	#obtenemos los residuos
+	res &lt;- y - fit
+	n &lt;- nrow(x); p &lt;- ncol(x); df &lt;- n - p
+	var_err &lt;- sum(res**2)/df
+	
+	#calculomos matriz covarianzas
+	vcov &lt;- var_err*solve(t(x) %*% x)
+		
+	#resultados
+	list(coefficients = coef, fitted.values = fit, residuals = res, var_err = var_err, vcov = vcov, df = df)
+}
+
+
+
+
+
+#Creamos la función genérica &quot;reglineal&quot;
+
+reglineal &lt;- function(x, ...) UseMethod(&quot;reglineal&quot;)
+
+
+
+
+
+# Método por defecto de &quot;reglineal&quot;
+
+reglineal.default &lt;- function(x, y, ...){
+	
+	x &lt;- as.matrix(x)
+	y &lt;- as.vector(y)
+	res &lt;- reglin(x, y)
+	res$data &lt;- cbind(y, x) #guardamos los datos para el plot
+	res$call &lt;- match.call() #guarda la llamada a la función
+	class(res) &lt;- &quot;reglineal&quot; #definimos la clase
+	return(res)
+}
+
+
+
+
+
+
+# Creamos un nuevo método de la función print
+
+print.reglineal &lt;- function(x, ...){
+cat(&quot;Call:\n&quot;) 
+print(x$call) 
+cat(&quot;\nCoefficients:\n&quot;) 
+print(x$coefficients)	
+}
+
+
+
+
+
+# Nuevo método para la función summary
+
+summary.reglineal &lt;- function(x, ...){	
+
+	#inferencia coef
+	et &lt;- sqrt(diag(x$vcov))
+	tvalues &lt;- abs(as.vector(x$coefficients))/et
+	pvalues &lt;- 2*pt(tvalues, x$df, lower.tail = FALSE)
+
+	tabla &lt;- cbind(Estimate = coef(x),
+					StdErr = et,
+					t.values = tvalues,
+					p.values = pvalues)
+				
+	res &lt;- list(call = x$call, coefficients = tabla)
+	class(res) &lt;- &quot;summary.reglineal&quot;
+	return(res)	
+}
+
+
+
+
+
+
+# Método print.summary
+
+print.summary.reglineal &lt;- function(x, ...){
+	cat(&quot;Call:\n&quot;)
+	print(x$call)
+	cat(&quot;\n&quot;)
+	
+	printCoefmat(x$coefficients, P.value=TRUE, has.Pvalue=T) #para pintar la tabla con la significación
+}
+
+
+
+
+
+# Nuevo método para la función genérica &quot;reglineal&quot; 
+
+# (Vamos a crear 2 métodos para la función &quot;reglineal&quot;, uno premite el cálculo introduciendo las variables directamente --reglineal.default(x,y,...)-- mientras que el otro método permite el uso de la fórmula --reglineal.formula(formula,data=list(),...)-- )
+
+reglineal.formula &lt;- function(formula, data = list(), ...){
+	mf &lt;- model.frame(formula = formula, data = data)
+	mt &lt;- attr(mf, &quot;terms&quot;)
+	x &lt;- model.matrix(mt, data = mf)
+	y &lt;- model.response(mf)
+	
+	res &lt;- reglineal.default(x, y, ...)
+	res$call &lt;- match.call()
+	res$formula &lt;- formula
+	return(res)
+}
+
+
+
+
+# Nuevo método para la función plot
+
+plot.reglineal &lt;- function(x, ...){
+	data &lt;- x$data	
+	coef &lt;- coef(x)
+	lab &lt;- colnames(data)
+	plot(data[, 3], data[, 1], xlab = lab[3], ylab = lab[1], ...)
+	abline(coef[1], coef[2], lwd = 2)
+}
+
+
+
+
+# Construcción del paquete
+
+mylist &lt;- c(&quot;reglin&quot;, &quot;reglineal&quot;, &quot;reglineal.default&quot;, &quot;print.reglineal&quot;, &quot;summary.reglineal&quot;, &quot;print.summary.reglineal&quot;, &quot;reglineal.formula&quot;, &quot;plot.reglineal&quot;)
+
+package.skeleton(name = &quot;ourpackage&quot;, mylist)
+
+
+
+
+</PRE>
+</BODY>
+</HTML>
