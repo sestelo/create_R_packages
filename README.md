@@ -1,9 +1,5 @@
----
-output:
-  pdf_document: default
-  html_document: default
----
-Creation of R packages course
+
+Course of creation of R packages
 ================================
 
 [![License](https://img.shields.io/badge/license-CC_BY--NC--SA_4.0-blue.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
