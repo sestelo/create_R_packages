@@ -3,9 +3,14 @@ setwd("~/Desktop/Taller_R")
 datos <- read.table("production.txt", header = TRUE)
 
 
+# Función Regresión lineal
+#   Input: 
+#        x: variable independiente
+#        y: variable respuesta
+
+
 
 #Creamos una función para regresión lineal
-
 reglin <- function(x, y){
 	
 	#calculamos beta   (X'X)^(-1) X'Y
@@ -20,7 +25,7 @@ reglin <- function(x, y){
 	n <- nrow(x); p <- ncol(x); df <- n - p
 	var_err <- sum(res**2)/df
 	
-	#calculomos matriz covarianzas
+	#calculamos matriz covarianzas
 	vcov <- var_err*solve(t(x) %*% x)
 		
 	#resultados
@@ -63,7 +68,8 @@ print.reglineal <- function(x, ...){
 cat("Call:\n") 
 print(x$call) 
 cat("\nCoefficients:\n") 
-print(x$coefficients)	}
+print(x$coefficients)	
+}
 
 
 
